@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Game – Prototype</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; }
+    #renderCanvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      touch-action: none;
+    }
+
+    /* ── HUD overlay ─────────────────────────────────────────────── */
+    #hud {
+      position: fixed;
+      top: 8px;
+      left: 8px;
+      color: #0f0;
+      font: 13px/1.5 monospace;
+      text-shadow: 1px 1px 2px #000;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* ── Controls panel ──────────────────────────────────────────── */
+    #controls {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      color: #fff;
+      font: 13px/1.8 sans-serif;
+      background: rgba(0,0,0,0.55);
+      padding: 8px 12px;
+      border-radius: 6px;
+      z-index: 10;
+    }
+    #controls label { margin-right: 6px; }
+    #controls select { background: #222; color: #fff; border: 1px solid #555; border-radius: 3px; padding: 2px 4px; }
+
+    /* ── Loading / error banner ──────────────────────────────────── */
+    #status {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font: 14px sans-serif;
+      background: rgba(0,0,0,0.7);
+      padding: 6px 16px;
+      border-radius: 20px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+
+  <div id="hud">
+    <div>FPS: <span id="fps">–</span></div>
+    <div>Pos: <span id="pos">–</span></div>
+  </div>
+
+  <div id="controls">
+    <label for="quality">Quality:</label>
+    <select id="quality">
+      <option value="low">Low</option>
+      <option value="medium" selected>Medium</option>
+      <option value="high">High</option>
+      <option value="ultra">Ultra</option>
+    </select>
+    <br/>
+    <small>WASD / arrows – move<br/>Mouse drag – look<br/>Click canvas – pointer lock</small>
+  </div>
+
+  <div id="status">Generating terrain…</div>
+
+  <!--
+    Babylon.js is loaded via the npm package bundled into this script.
+    For a no-bundler setup you could also load it from a CDN:
+      <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    but for Electron / offline use the local npm package is preferred.
+    renderer.js uses a simple require() shim via Electron's nodeIntegration
+    being OFF, so we inline a minimal BABYLON global from the CDN for now
+    and let renderer.js use it.  When you add a bundler (webpack / esbuild)
+    replace the CDN tag with your bundled entry-point.
+  -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

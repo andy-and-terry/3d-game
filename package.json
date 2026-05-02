@@ -1,0 +1,25 @@
+{
+  "name": "procedural-electron-babylon",
+  "version": "0.1.0",
+  "description": "3D game scaffold: Electron + Babylon.js renderer + Python terrain generator",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron ."
+  },
+  "dependencies": {
+    "@babylonjs/core": "^6.0.0",
+    "@babylonjs/loaders": "^6.0.0"
+  },
+  "devDependencies": {
+    "electron": "^25.0.0"
+  },
+  "keywords": [
+    "electron",
+    "babylonjs",
+    "procedural",
+    "terrain"
+  ],
+  "author": "",
+  "license": "MIT"
+}
