@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+
+    #renderCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    /* Overlay UI */
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Worlds button (top-left) */
+    #btn-worlds {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      pointer-events: all;
+      background: rgba(20, 20, 40, 0.85);
+      color: #e0e8ff;
+      border: 1px solid rgba(120, 140, 255, 0.5);
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    #btn-worlds:hover {
+      background: rgba(40, 40, 80, 0.95);
+      border-color: rgba(140, 160, 255, 0.9);
+    }
+    #btn-worlds svg { flex-shrink: 0; }
+
+    /* FPS overlay */
+    #fps {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      color: rgba(200, 220, 200, 0.85);
+      font-size: 13px;
+      font-family: monospace;
+      pointer-events: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* Seed overlay */
+    #seed-display {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      color: rgba(180, 200, 255, 0.7);
+      font-size: 12px;
+      font-family: monospace;
+      pointer-events: none;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+
+    /* Quality selector */
+    #quality-bar {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      pointer-events: all;
+      display: flex;
+      gap: 6px;
+    }
+    .q-btn {
+      background: rgba(20, 20, 40, 0.75);
+      color: #aaa;
+      border: 1px solid rgba(100, 100, 160, 0.4);
+      border-radius: 5px;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: monospace;
+      transition: background 0.15s;
+    }
+    .q-btn:hover { background: rgba(40,40,80,0.9); color: #ddf; }
+    .q-btn.active { background: rgba(60,80,180,0.8); color: #fff; border-color: #88aaff; }
+  </style>
+</head>
+<body>
+  <canvas id="renderCanvas"></canvas>
+
+  <div id="overlay">
+    <!-- Worlds menu button -->
+    <button id="btn-worlds" title="Open Worlds Menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="2" y1="12" x2="22" y2="12"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+      </svg>
+      Worlds
+    </button>
+
+    <!-- FPS counter -->
+    <div id="fps">-- fps</div>
+
+    <!-- Current seed info -->
+    <div id="seed-display">seed: —</div>
+
+    <!-- Quality preset buttons -->
+    <div id="quality-bar">
+      <button class="q-btn" data-q="low">Low</button>
+      <button class="q-btn active" data-q="medium">Medium</button>
+      <button class="q-btn" data-q="high">High</button>
+      <button class="q-btn" data-q="ultra">Ultra</button>
+    </div>
+  </div>
+
+  <!-- Babylon.js via CDN (works in Electron) -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="renderer.js"></script>
+
+  <script>
+    // Open worlds menu in a new window
+    document.getElementById('btn-worlds').addEventListener('click', () => {
+      window.open('worlds_menu.html', '_blank', 'width=900,height=650');
+    });
+  </script>
+</body>
+</html>

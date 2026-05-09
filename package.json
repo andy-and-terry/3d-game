@@ -1,9 +1,35 @@
 {
   "name": "3d-game",
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Procedural 3D game with Electron + Babylon.js",
   "private": true,
   "type": "commonjs",
+  "main": "src/main.js",
   "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder",
     "test": "node --test"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^6.0.0",
+    "@babylonjs/loaders": "^6.0.0"
+  },
+  "devDependencies": {
+    "electron": "^42.0.1",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.andy-and-terry.3d-game",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "src/**/*",
+      "gen/**/*",
+      "assets/**/*",
+      "tools/**/*",
+      "data/**/*"
+    ]
   }
 }

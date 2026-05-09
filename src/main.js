@@ -1,4 +1,6 @@
-const { app, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const path = require('path');
+const { spawn } = require('child_process');
 const worldsManager = require('./worlds_manager');
 
 const DAY_SECONDS = 24 * 60 * 60;
@@ -12,6 +14,22 @@ const tickState = {
   timeOfDaySeconds: MORNING_SECONDS,
   lastUpdateMs: Date.now(),
 };
+
+let worldsService = null;
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  return win;
+}
 
 function advanceTickClock(nowMs = Date.now()) {
   if (!tickState.paused) {
@@ -101,7 +119,41 @@ function evaluateRabbitPlan(payload) {
   };
 }
 
-function registerSimulationIpcHandlers(worldsService) {
+function registerIpcHandlers() {
+  ipcMain.handle('generate-terrain', async (_event, opts) => {
+    return new Promise((resolve, reject) => {
+      const pyExec = process.env.PYTHON_EXEC || 'python';
+      const genScript = path.join(__dirname, '..', 'gen', 'generator.py');
+      const py = spawn(pyExec, [genScript], { stdio: ['pipe', 'pipe', 'pipe'] });
+
+      let stdout = '';
+      let stderr = '';
+      py.stdout.on('data', (d) => { stdout += d.toString(); });
+      py.stderr.on('data', (d) => { stderr += d.toString(); });
+      py.on('close', (code) => {
+        if (code !== 0) return reject(new Error(stderr || `Python exited ${code}`));
+        try {
+          resolve(JSON.parse(stdout));
+        } catch (_) {
+          reject(new Error('Invalid JSON from generator'));
+        }
+      });
+      py.on('error', (err) => reject(err));
+      py.stdin.write(JSON.stringify(opts));
+      py.stdin.end();
+    });
+  });
+
+  ipcMain.handle('dialog:openFile', async (_event, opts) => {
+    const result = await dialog.showOpenDialog(opts || {});
+    return result;
+  });
+
+  ipcMain.handle('dialog:saveFile', async (_event, opts) => {
+    const result = await dialog.showSaveDialog(opts || {});
+    return result;
+  });
+
   ipcMain.handle('ai:evaluate', async (_event, payload) => evaluateRabbitPlan(payload || {}));
 
   ipcMain.handle('tick:get-state', async () => getTickSnapshot());
@@ -151,6 +203,15 @@ function registerSimulationIpcHandlers(worldsService) {
 }
 
 app.whenReady().then(() => {
-  const worldsService = worldsManager.init(app);
-  registerSimulationIpcHandlers(worldsService);
+  worldsService = worldsManager.init(app);
+  registerIpcHandlers();
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
 });
