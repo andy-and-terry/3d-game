@@ -30,11 +30,7 @@ class ChunkGeneratorWorkerManager {
 
     const jobPromise = new Promise((resolve, reject) => {
       this.queue.push({ key, cachePath, x, y, seed, resolve, reject });
-      try {
-        this.#drainQueue();
-      } catch (error) {
-        reject(error);
-      }
+      this.#drainQueue();
     }).finally(() => {
       this.inFlight.delete(key);
     });
@@ -108,7 +104,11 @@ class ChunkGeneratorWorkerManager {
 
       child.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`Chunk worker exited with code ${code}: ${stderr}`));
+          reject(
+            new Error(
+              `Worker failed to generate chunk at (${payload.x}, ${payload.y}) with exit code ${code}: ${stderr}`,
+            ),
+          );
           return;
         }
 

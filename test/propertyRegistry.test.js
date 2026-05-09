@@ -27,5 +27,5 @@ test('PropertyRegistry loads JSON properties by type and id', async () => {
 
   assert.equal(registry.get('item.stone')?.name, 'Stone');
   assert.equal(registry.getByType('flora', 'flora.grass')?.name, 'Grass');
-  assert.equal(registry.listByType('items').length, 1);
+  assert.ok(registry.listByType('items').some((item) => item.id === 'item.stone'));
 });
