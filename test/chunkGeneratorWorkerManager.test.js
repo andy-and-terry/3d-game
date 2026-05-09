@@ -40,3 +40,15 @@ test('ChunkGeneratorWorkerManager generates, queues and caches chunks', async ()
   const cachedChunk = await manager.getChunk({ x: 1, y: 2, seed: 10 });
   assert.equal(cachedChunk.id, '1_2');
 });
+
+test('ChunkGeneratorWorkerManager validates maxConcurrentJobs', () => {
+  assert.throws(
+    () =>
+      new ChunkGeneratorWorkerManager({
+        userDataPath: '/tmp/chunks',
+        workerScriptPath: '/tmp/worker.py',
+        maxConcurrentJobs: 0,
+      }),
+    /maxConcurrentJobs must be a positive integer/,
+  );
+});

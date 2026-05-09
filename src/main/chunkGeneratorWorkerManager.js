@@ -4,10 +4,14 @@ const { spawn } = require('node:child_process');
 
 class ChunkGeneratorWorkerManager {
   constructor({ userDataPath, workerScriptPath, pythonCommand = 'python3', maxConcurrentJobs = 1 }) {
+    if (!Number.isInteger(maxConcurrentJobs) || maxConcurrentJobs < 1) {
+      throw new Error('maxConcurrentJobs must be a positive integer');
+    }
+
     this.userDataPath = userDataPath;
     this.workerScriptPath = workerScriptPath;
     this.pythonCommand = pythonCommand;
-    this.maxConcurrentJobs = Math.max(1, maxConcurrentJobs);
+    this.maxConcurrentJobs = maxConcurrentJobs;
     this.cacheDir = path.join(userDataPath, 'chunks');
 
     this.queue = [];
@@ -106,7 +110,7 @@ class ChunkGeneratorWorkerManager {
         if (code !== 0) {
           reject(
             new Error(
-              `Worker failed to generate chunk at (${payload.x}, ${payload.y}) with exit code ${code}: ${stderr}`,
+              `Worker failed to generate chunk at (${payload.x}, ${payload.y}, seed=${payload.seed}) with exit code ${code}: ${stderr}`,
             ),
           );
           return;
