@@ -4,6 +4,12 @@
     medium: { shadows: true, ssao: true, ssr: false, bloom: true },
     high: { shadows: true, ssao: true, ssr: true, bloom: true }
   };
+  const MOON_LIGHT_ON_INTENSITY = 0.2;
+  const MOON_LIGHT_OFF_INTENSITY = 0;
+  const SUN_LIGHT_WITH_MOON_INTENSITY = 0.85;
+  const SUN_LIGHT_FULL_INTENSITY = 1.0;
+  const SHADOW_BIAS_ENABLED = 0.0005;
+  const SHADOW_BIAS_DISABLED = 0.02;
 
   function safeCall(fn, ...args) {
     try {
@@ -30,10 +36,7 @@
       const setter = featureSetters[feature];
       if (typeof setter === 'function') {
         safeCall(setter, enabled);
-        continue;
-      }
-
-      if (typeof graphics.setFeatureEnabled === 'function') {
+      } else if (typeof graphics.setFeatureEnabled === 'function') {
         safeCall(graphics.setFeatureEnabled, feature, enabled);
       }
     }
@@ -63,12 +66,12 @@
 
     if (options && options.moonLight) {
       options.moonLight.setEnabled(Boolean(state.scene.moonLight));
-      options.moonLight.intensity = state.scene.moonLight ? 0.2 : 0;
+      options.moonLight.intensity = state.scene.moonLight ? MOON_LIGHT_ON_INTENSITY : MOON_LIGHT_OFF_INTENSITY;
     }
 
     if (options && options.sunLight) {
       options.sunLight.setEnabled(true);
-      options.sunLight.intensity = state.scene.moonLight ? 0.85 : 1.0;
+      options.sunLight.intensity = state.scene.moonLight ? SUN_LIGHT_WITH_MOON_INTENSITY : SUN_LIGHT_FULL_INTENSITY;
     }
 
     if (scene.imageProcessingConfiguration) {
@@ -89,7 +92,7 @@
 
     if (options && options.shadowGenerator) {
       options.shadowGenerator.usePoissonSampling = Boolean(state.features.shadows);
-      options.shadowGenerator.bias = state.features.shadows ? 0.0005 : 0.02;
+      options.shadowGenerator.bias = state.features.shadows ? SHADOW_BIAS_ENABLED : SHADOW_BIAS_DISABLED;
     }
   }
 
