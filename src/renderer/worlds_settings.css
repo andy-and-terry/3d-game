@@ -1,0 +1,134 @@
+/*
+ * worlds_settings.css
+ * Shared styles for worlds settings modal and add-on management.
+ * Imported by worlds_menu.html.
+ */
+
+/* ------------------------------------------------------------------ */
+/*  Scrollbar styling (Chromium / Electron)                             */
+/* ------------------------------------------------------------------ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 140, 220, 0.35);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 140, 220, 0.6);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Settings modal overrides                                            */
+/* ------------------------------------------------------------------ */
+#modal-settings .modal {
+  width: 520px;
+}
+
+/* Section header */
+.settings-section h3 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #6680bb;
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* A row in the settings panel */
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+}
+.setting-row:last-child {
+  border-bottom: none;
+}
+.setting-row label {
+  color: #aabbd0;
+  font-size: 13px;
+  margin: 0;
+  flex: 1;
+}
+.setting-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #6680ff;
+  cursor: pointer;
+}
+.setting-row input[type="range"] {
+  width: 110px;
+  accent-color: #6680ff;
+  cursor: pointer;
+}
+.setting-row select {
+  background: #1a1c2e;
+  color: #ccd;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+}
+.setting-row select:focus {
+  border-color: rgba(100, 130, 255, 0.6);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Add-on list                                                         */
+/* ------------------------------------------------------------------ */
+.addon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 7px;
+  margin-bottom: 6px;
+  transition: background 0.15s;
+}
+.addon-row:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.addon-row .addon-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #bbc;
+}
+.addon-row .addon-meta {
+  font-size: 11px;
+  color: #556;
+  margin-top: 2px;
+}
+.addon-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #6680ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.no-addons {
+  color: #445;
+  font-size: 13px;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------------ */
+/*  .hidden utility                                                      */
+/* ------------------------------------------------------------------ */
+.hidden {
+  display: none !important;
+}
