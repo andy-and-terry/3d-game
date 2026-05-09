@@ -108,9 +108,10 @@ class ChunkGeneratorWorkerManager {
 
       child.on('close', (code) => {
         if (code !== 0) {
+          const stderrSnippet = stderr.trim().slice(0, 500);
           reject(
             new Error(
-              `Worker failed to generate chunk at (${payload.x}, ${payload.y}, seed=${payload.seed}) with exit code ${code}: ${stderr}`,
+              `Worker failed to generate chunk at (${payload.x}, ${payload.y}, seed=${payload.seed}) with exit code ${code}: ${stderrSnippet}`,
             ),
           );
           return;
