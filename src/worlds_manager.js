@@ -230,7 +230,7 @@ function init(app) {
     const raw = fs.readFileSync(registryPath, 'utf8');
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      throw new Error('worlds registry is invalid');
+      throw new Error('worlds registry must be an array');
     }
     return parsed;
   }
@@ -347,7 +347,7 @@ function validateWorldDocument(world) {
   }
 
   if (world.version !== 1) {
-    throw new Error('Unsupported world version');
+    throw new Error(`Unsupported world version: expected 1, got ${world.version}`);
   }
 
   if (typeof world.id !== 'string' || world.id.trim().length === 0) {
