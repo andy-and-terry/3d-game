@@ -104,12 +104,7 @@ function init(app) {
     writeSettingsFile(id, world.settings);
 
     const metadata = buildMetadataFromWorld(world);
-    const index = registry.findIndex((entry) => entry.id === id);
-    if (index >= 0) {
-      registry[index] = metadata;
-    } else {
-      registry.push(metadata);
-    }
+    registry.push(metadata);
     saveRegistry(registry);
 
     return { world: metadata };
@@ -165,9 +160,6 @@ function init(app) {
 
     const registry = loadRegistry();
     const entry = registry.find((item) => item.id === id);
-    if (!entry) {
-      throw new Error(`World not found in registry: ${id}`);
-    }
     entry.name = normalizedName;
     saveRegistry(registry);
 
@@ -230,7 +222,7 @@ function init(app) {
     const raw = fs.readFileSync(registryPath, 'utf8');
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-      throw new Error('worlds registry must be an array');
+      throw new Error(`worlds registry must be an array: ${registryPath}`);
     }
     return parsed;
   }
@@ -313,7 +305,7 @@ function ensureRegistry(registryPath) {
   const raw = fs.readFileSync(registryPath, 'utf8');
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed)) {
-    throw new Error('worlds registry must be an array');
+    throw new Error(`worlds registry must be an array: ${registryPath}`);
   }
 }
 
@@ -359,7 +351,7 @@ function validateWorldDocument(world) {
   }
 
   if (typeof world.seed !== 'string' && typeof world.seed !== 'number') {
-    throw new Error('World seed must be a string or number');
+    throw new Error(`World seed must be a string or number, got ${typeof world.seed}`);
   }
 
   if (!isPlainObject(world.settings)) {
@@ -380,7 +372,10 @@ function validateWorldDocument(world) {
 
   if (
     world.thumbnail_base64 !== undefined &&
-    (typeof world.thumbnail_base64 !== 'string' || world.thumbnail_base64.length === 0)
+    (
+      typeof world.thumbnail_base64 !== 'string' ||
+      world.thumbnail_base64.trim().length === 0
+    )
   ) {
     throw new Error('thumbnail_base64 must be a non-empty base64 string when present');
   }
@@ -420,6 +415,7 @@ function normalizeSeed(seed) {
     return seed.trim();
   }
 
+  // Default to a timestamp seed when an explicit usable seed is not provided.
   return Date.now();
 }
 
