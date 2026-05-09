@@ -6,9 +6,12 @@
   "type": "commonjs",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron .",
+    "node:check-lts": "node ./tools/check-node-lts.js",
+    "start": "npm run node:check-lts && electron .",
+    "start:dev": "npm run node:check-lts && electron .",
+    "dev": "npm run start:dev",
     "build": "electron-builder",
+    "build:win": "npm run node:check-lts && electron-builder --win nsis",
     "test": "node --test"
   },
   "dependencies": {
@@ -17,19 +20,33 @@
   },
   "devDependencies": {
     "electron": "^42.0.1",
-    "electron-builder": "^24.0.0"
+    "electron-builder": "^24.13.3"
   },
   "build": {
     "appId": "com.andy-and-terry.3d-game",
-    "win": {
-      "target": "nsis"
+    "productName": "3D Game",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
     },
     "files": [
-      "src/**/*",
       "gen/**/*",
       "assets/**/*",
       "tools/**/*",
-      "data/**/*"
-    ]
+      "data/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "include": "tools/installer/include.nsh"
+    }
   }
 }
