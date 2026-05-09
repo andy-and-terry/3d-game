@@ -160,6 +160,9 @@ function init(app) {
 
     const registry = loadRegistry();
     const entry = registry.find((item) => item.id === id);
+    if (!entry) {
+      throw new Error(`World not found in registry: ${id}`);
+    }
     entry.name = normalizedName;
     saveRegistry(registry);
 
