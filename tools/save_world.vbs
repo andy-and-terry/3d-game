@@ -101,6 +101,10 @@ WScript.Echo "[OK] Written: " & outPath
 WScript.Quit 0
 
 ' ---- helper: escape a string for JSON ----
+' Note: handles common control characters. File names containing
+' characters outside this set (e.g. exotic Unicode) should be
+' handled by the application layer (Electron IPC) rather than
+' this script, which is provided as a demonstration example.
 Function JsonEscape(s)
     s = Replace(s, "\",  "\\")
     s = Replace(s, """", "\""")

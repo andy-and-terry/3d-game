@@ -10,6 +10,11 @@
   'use strict';
 
   // ------------------------------------------------------------------ //
+  //  Constants                                                           //
+  // ------------------------------------------------------------------ //
+  const MAX_SEED_VALUE = 2147483647; // max 32-bit signed integer
+
+  // ------------------------------------------------------------------ //
   //  API guard — show friendly message if core IPC is missing           //
   // ------------------------------------------------------------------ //
   const api = (typeof window !== 'undefined' && window.api && window.api.worlds)
@@ -233,13 +238,13 @@
 
   function randomizeSeed() {
     document.getElementById('new-world-seed').value =
-      Math.floor(Math.random() * 2147483647);
+      Math.floor(Math.random() * MAX_SEED_VALUE);
   }
 
   async function createWorld() {
     const name = document.getElementById('new-world-name').value.trim() || 'New World';
     const seedVal = document.getElementById('new-world-seed').value;
-    const seed = seedVal !== '' ? parseInt(seedVal, 10) : Math.floor(Math.random() * 2147483647);
+    const seed = seedVal !== '' ? parseInt(seedVal, 10) : Math.floor(Math.random() * MAX_SEED_VALUE);
 
     closeNewModal();
     setStatus('Creating world…', '', 0);

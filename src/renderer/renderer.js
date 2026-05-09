@@ -233,7 +233,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     currentQuality = detectQuality();
     initScene();
-    const seed = Math.floor(Math.random() * 2 ** 31);
+    const seed = Math.floor(Math.random() * (2 ** 31 - 1));
     loadTerrain(seed);
   });
 
