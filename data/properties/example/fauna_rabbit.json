@@ -1,0 +1,15 @@
+{
+  "id": "fauna.rabbit",
+  "displayName": "Rabbit",
+  "category": "fauna",
+  "spawn": {
+    "biomes": ["grassland", "forest"],
+    "elevationMin": 0,
+    "elevationMax": 120,
+    "density": 0.18
+  },
+  "traits": {
+    "herbivore": true,
+    "groupSize": [1, 4]
+  }
+}
