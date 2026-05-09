@@ -141,7 +141,7 @@
 
       if (typeof worldsApi.createWorld === 'function') {
         const created = await worldsApi.createWorld({
-          name: 'Demo World',
+          name: 'Starter World',
           seed: 1337,
           settings: {},
           addons: [],
@@ -155,18 +155,28 @@
     return null;
   }
 
-  function spawnDemoRabbits(scene, aiApi) {
+  function createRabbitController(scene, aiApi) {
     if (!window.BABYLON || !scene) {
       return null;
     }
 
     const rabbits = [];
-    const rabbitMaterial = new BABYLON.StandardMaterial('demo-rabbit-material', scene);
+    const rabbitMaterial = new BABYLON.StandardMaterial('rabbit-material', scene);
     rabbitMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+    rabbitMaterial.specularColor = new BABYLON.Color3(0.05, 0.05, 0.05);
 
-    for (let index = 0; index < 3; index += 1) {
-      const mesh = BABYLON.MeshBuilder.CreateSphere(`demo-rabbit-${index + 1}`, { diameter: 0.8 }, scene);
-      mesh.position = new BABYLON.Vector3(-4 + (index * 3), 0.8, 5 - index);
+    let rabbitSpeedMultiplier = 1;
+    let targetRabbitCount = 3;
+
+    function spawnRabbit() {
+      const index = rabbits.length;
+      const mesh = BABYLON.MeshBuilder.CreateCapsule(
+        `rabbit-${index + 1}`,
+        { height: 0.85, radius: 0.24, tessellation: 8 },
+        scene,
+      );
+      mesh.rotation.x = Math.PI / 2;
+      mesh.position = new BABYLON.Vector3(-4 + (index * 2.4), 0.55, 5 - (index * 0.8));
       mesh.material = rabbitMaterial;
       rabbits.push({
         id: mesh.name,
@@ -175,6 +185,21 @@
         planExpiresAt: 0,
         planRequestInFlight: false,
       });
+      return rabbits[rabbits.length - 1];
+    }
+
+    function syncRabbitCount() {
+      while (rabbits.length < targetRabbitCount) {
+        const rabbit = spawnRabbit();
+        requestPlan(rabbit);
+      }
+
+      while (rabbits.length > targetRabbitCount) {
+        const rabbit = rabbits.pop();
+        if (rabbit && rabbit.mesh) {
+          rabbit.mesh.dispose();
+        }
+      }
     }
 
     async function requestPlan(rabbit) {
@@ -208,6 +233,10 @@
       }
     }
 
+    for (let index = 0; index < targetRabbitCount; index += 1) {
+      spawnRabbit();
+    }
+
     const requestInterval = setInterval(() => {
       rabbits.forEach((rabbit) => {
         if (Date.now() >= rabbit.planExpiresAt) {
@@ -225,8 +254,8 @@
       rabbits.forEach((rabbit) => {
         if (rabbit.plan.action !== 'move') return;
 
-        rabbit.mesh.position.x += rabbit.plan.direction.x * rabbit.plan.speed * deltaSeconds;
-        rabbit.mesh.position.z += rabbit.plan.direction.z * rabbit.plan.speed * deltaSeconds;
+        rabbit.mesh.position.x += rabbit.plan.direction.x * rabbit.plan.speed * rabbitSpeedMultiplier * deltaSeconds;
+        rabbit.mesh.position.z += rabbit.plan.direction.z * rabbit.plan.speed * rabbitSpeedMultiplier * deltaSeconds;
 
         if (
           Math.abs(rabbit.mesh.position.x) > RABBIT_BOUNDARY_LIMIT ||
@@ -245,6 +274,12 @@
           action: rabbit.plan.action,
         }));
       },
+      applyUpgradeEffects(effects) {
+        const safe = effects && typeof effects === 'object' ? effects : {};
+        rabbitSpeedMultiplier = Math.max(0.5, Number(safe.rabbitSpeedMultiplier) || 1);
+        targetRabbitCount = Math.max(1, Math.floor(Number(safe.rabbitCount) || 3));
+        syncRabbitCount();
+      },
       dispose() {
         clearInterval(requestInterval);
         scene.onBeforeRenderObservable.remove(observer);
@@ -253,14 +288,14 @@
     };
   }
 
-  function attachBedInteraction(scene, camera, tickApi, worldId, simulationUi) {
+  function attachBedInteraction(scene, camera, tickApi, worldId, simulationUi, getInteractionRange) {
     if (!window.BABYLON || !scene || !camera) {
       return null;
     }
 
-    const bed = BABYLON.MeshBuilder.CreateBox('demo-bed', { width: 2.2, depth: 3.4, height: 0.6 }, scene);
+    const bed = BABYLON.MeshBuilder.CreateBox('bed', { width: 2.2, depth: 3.4, height: 0.6 }, scene);
     bed.position = new BABYLON.Vector3(6, 0.3, 6);
-    const bedMaterial = new BABYLON.StandardMaterial('demo-bed-material', scene);
+    const bedMaterial = new BABYLON.StandardMaterial('bed-material', scene);
     bedMaterial.diffuseColor = new BABYLON.Color3(0.6, 0.2, 0.2);
     bed.material = bedMaterial;
 
@@ -268,8 +303,12 @@
     let promptVisible = false;
 
     const proximityObserver = scene.onBeforeRenderObservable.add(() => {
+      const interactionRange = Math.max(
+        0.5,
+        typeof getInteractionRange === 'function' ? Number(getInteractionRange()) || BED_INTERACTION_RANGE : BED_INTERACTION_RANGE,
+      );
       const distance = BABYLON.Vector3.Distance(camera.position, bed.position);
-      const nextNearby = distance <= BED_INTERACTION_RANGE;
+      const nextNearby = distance <= interactionRange;
       if (nextNearby && !promptVisible && simulationUi) {
         simulationUi.setStatus('Press E near the bed to sleep until morning');
         promptVisible = true;
@@ -342,7 +381,7 @@
     }
   }
 
-  function updateDebugOverlay(loader, rabbitDemo, simulationUi) {
+  function updateDebugOverlay(loader, rabbitController, simulationUi) {
     const loadedList = document.getElementById('loaded-chunks');
     const statusList = document.getElementById('generation-statuses');
     const state = loader.getDebugSnapshot();
@@ -355,8 +394,8 @@
       statusList.textContent = state.statuses.map((entry) => `${entry.key}=${entry.status}`).join('\n') || '(none)';
     }
 
-    if (simulationUi && rabbitDemo) {
-      simulationUi.setAiStates(rabbitDemo.getDebugStates());
+    if (simulationUi && rabbitController) {
+      simulationUi.setAiStates(rabbitController.getDebugStates());
     }
   }
 
@@ -392,33 +431,50 @@
     loader.start();
     attachControls(loader);
 
+    let upgradeEffects = {
+      rabbitSpeedMultiplier: 1,
+      rabbitCount: 3,
+      sleepRangeBonus: 0,
+    };
+
+    const rabbitController = createRabbitController(sceneContext.scene, rendererApi.ai);
+    if (rabbitController) {
+      rabbitController.applyUpgradeEffects(upgradeEffects);
+    }
+
     const simulationRoot = document.getElementById('simulation-panel');
     const simulationUi = window.simulationPanel && simulationRoot
       ? window.simulationPanel.initSimulationPanel(simulationRoot, {
         tickApi: rendererApi.tick,
+        onUpgradesChanged(nextEffects) {
+          upgradeEffects = { ...upgradeEffects, ...(nextEffects || {}) };
+          if (rabbitController) {
+            rabbitController.applyUpgradeEffects(upgradeEffects);
+          }
+        },
       })
       : null;
     if (simulationUi) {
       simulationUi.setStatus('Simulation running');
     }
 
-    const rabbitDemo = spawnDemoRabbits(sceneContext.scene, rendererApi.ai);
     const bedInteraction = attachBedInteraction(
       sceneContext.scene,
       sceneContext.camera,
       rendererApi.tick,
       worldId,
       simulationUi,
+      () => BED_INTERACTION_RANGE + (Number(upgradeEffects.sleepRangeBonus) || 0),
     );
 
     sceneContext.scene.onBeforeRenderObservable.add(() => {
       loader.updatePlayerPosition(sceneContext.camera.position);
-      updateDebugOverlay(loader, rabbitDemo, simulationUi);
+      updateDebugOverlay(loader, rabbitController, simulationUi);
     });
 
     window.addEventListener('beforeunload', () => {
       loader.stop();
-      if (rabbitDemo) rabbitDemo.dispose();
+      if (rabbitController) rabbitController.dispose();
       if (bedInteraction) bedInteraction.dispose();
       if (simulationUi) simulationUi.destroy();
     });
