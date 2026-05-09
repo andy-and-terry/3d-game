@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  NODE_VERSION: 20
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -18,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: Install dependencies
