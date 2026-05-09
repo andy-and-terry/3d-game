@@ -1,0 +1,9 @@
+{
+  "material": "tree_bark",
+  "model": "assets/examples/sample_tree.glb",
+  "pbr": {
+    "baseColorTexture": "assets/examples/textures/tree_bark_basecolor.png",
+    "metallic": 0.02,
+    "roughness": 0.95
+  }
+}
