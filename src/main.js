@@ -4,6 +4,7 @@ const worldsManager = require('./worlds_manager');
 const DAY_SECONDS = 24 * 60 * 60;
 const MORNING_SECONDS = 6 * 60 * 60;
 const NIGHT_SECONDS = 20 * 60 * 60;
+const RABBIT_BEHAVIOR_CYCLES = 4;
 
 const tickState = {
   paused: false,
@@ -15,7 +16,8 @@ const tickState = {
 function advanceTickClock(nowMs = Date.now()) {
   if (!tickState.paused) {
     const elapsedSeconds = Math.max(0, (nowMs - tickState.lastUpdateMs) / 1000);
-    tickState.timeOfDaySeconds = (tickState.timeOfDaySeconds + elapsedSeconds * tickState.timeMultiplier) % DAY_SECONDS;
+    const nextTime = tickState.timeOfDaySeconds + elapsedSeconds * tickState.timeMultiplier;
+    tickState.timeOfDaySeconds = ((nextTime % DAY_SECONDS) + DAY_SECONDS) % DAY_SECONDS;
   }
 
   tickState.lastUpdateMs = nowMs;
@@ -49,7 +51,8 @@ function hashText(value) {
 function evaluateRabbitPlan(payload) {
   const nowSeconds = Math.floor(Date.now() / 1000);
   const entityId = payload && payload.entityId ? payload.entityId : 'rabbit';
-  const cycle = (nowSeconds + hashText(entityId)) % 4;
+  const cycleOffsetFromEntityId = hashText(entityId);
+  const cycle = (nowSeconds + cycleOffsetFromEntityId) % RABBIT_BEHAVIOR_CYCLES;
   const tickSnapshot = getTickSnapshot();
   const isNight = tickSnapshot.timeOfDaySeconds >= NIGHT_SECONDS || tickSnapshot.timeOfDaySeconds < MORNING_SECONDS;
 
@@ -121,17 +124,18 @@ function registerSimulationIpcHandlers(worldsService) {
   ipcMain.handle('tick:jump-to-night', async () => setTickTime(NIGHT_SECONDS));
   ipcMain.handle('tick:sleep-to-morning', async (_event, payload = {}) => {
     const worldId = typeof payload.worldId === 'string' ? payload.worldId.trim() : '';
-    const sleptAt = new Date().toISOString();
+    const sleepTimestamp = new Date().toISOString();
     const state = setTickTime(MORNING_SECONDS);
 
     let persisted = false;
     if (worldId && worldsService) {
       try {
         const currentSettings = worldsService.getWorldSettings(worldId);
-        const nextSettings = { ...currentSettings, last_slept: sleptAt };
+        const nextSettings = { ...currentSettings, last_slept: sleepTimestamp };
         worldsService.setWorldSettings(worldId, nextSettings);
         persisted = true;
-      } catch (_) {
+      } catch (error) {
+        console.warn(`tick:sleep-to-morning failed to persist last_slept for world ${worldId}`, error);
         persisted = false;
       }
     }
@@ -140,7 +144,7 @@ function registerSimulationIpcHandlers(worldsService) {
       ok: true,
       persisted,
       worldId: worldId || null,
-      lastSlept: sleptAt,
+      lastSlept: sleepTimestamp,
       state,
     };
   });

@@ -1,6 +1,12 @@
 (function () {
   'use strict';
 
+  const MIN_PLAN_DURATION_MS = 500;
+  const DEFAULT_PLAN_DURATION_MS = 1800;
+  const RABBIT_PLAN_CHECK_INTERVAL_MS = 250;
+  const RABBIT_BOUNDARY_LIMIT = 15;
+  const BED_INTERACTION_RANGE = 4;
+
   function getIpcRenderer() {
     if (window.require) {
       try {
@@ -105,11 +111,15 @@
     const safePlan = rawPlan && typeof rawPlan === 'object' ? rawPlan : {};
     const action = safePlan.action === 'move' ? 'move' : 'idle';
     const speed = Math.max(0, Number(safePlan.speed) || 0);
-    const durationMs = Math.max(500, Number(safePlan.durationMs) || 1800);
-    const x = Number(safePlan.direction && safePlan.direction.x) || 0;
-    const z = Number(safePlan.direction && safePlan.direction.z) || 0;
-    const magnitude = Math.hypot(x, z);
-    const direction = magnitude > 0 ? { x: x / magnitude, z: z / magnitude } : { x: 0, z: 0 };
+    const durationMs = Math.max(MIN_PLAN_DURATION_MS, Number(safePlan.durationMs) || DEFAULT_PLAN_DURATION_MS);
+    let direction = { x: 0, z: 0 };
+
+    if (action === 'move') {
+      const x = Number(safePlan.direction && safePlan.direction.x) || 0;
+      const z = Number(safePlan.direction && safePlan.direction.z) || 0;
+      const magnitude = Math.hypot(x, z);
+      direction = magnitude > 0 ? { x: x / magnitude, z: z / magnitude } : { x: 0, z: 0 };
+    }
 
     return {
       state: safePlan.state || (action === 'move' ? 'moving' : 'idle'),
@@ -120,7 +130,7 @@
     };
   }
 
-  async function resolveActiveWorldId(worldsApi) {
+  async function getOrCreateWorldId(worldsApi) {
     if (!worldsApi || typeof worldsApi.listWorlds !== 'function') return null;
 
     try {
@@ -132,7 +142,7 @@
       if (typeof worldsApi.createWorld === 'function') {
         const created = await worldsApi.createWorld({
           name: 'Demo World',
-          seed: Date.now(),
+          seed: 1337,
           settings: {},
           addons: [],
         });
@@ -163,29 +173,39 @@
         mesh,
         plan: normalizePlan({ action: 'idle', durationMs: 1000 }),
         planExpiresAt: 0,
+        planRequestInFlight: false,
       });
     }
 
     async function requestPlan(rabbit) {
-      let nextPlan = null;
-      if (aiApi && typeof aiApi.evaluate === 'function') {
-        try {
-          nextPlan = await aiApi.evaluate({
-            entityId: rabbit.id,
-            entityType: 'rabbit',
-            position: {
-              x: rabbit.mesh.position.x,
-              y: rabbit.mesh.position.y,
-              z: rabbit.mesh.position.z,
-            },
-          });
-        } catch (_) {
-          nextPlan = null;
-        }
+      if (rabbit.planRequestInFlight) {
+        return;
       }
 
-      rabbit.plan = normalizePlan(nextPlan);
-      rabbit.planExpiresAt = Date.now() + rabbit.plan.durationMs;
+      rabbit.planRequestInFlight = true;
+      try {
+        let nextPlan = null;
+        if (aiApi && typeof aiApi.evaluate === 'function') {
+          try {
+            nextPlan = await aiApi.evaluate({
+              entityId: rabbit.id,
+              entityType: 'rabbit',
+              position: {
+                x: rabbit.mesh.position.x,
+                y: rabbit.mesh.position.y,
+                z: rabbit.mesh.position.z,
+              },
+            });
+          } catch (_) {
+            nextPlan = null;
+          }
+        }
+
+        rabbit.plan = normalizePlan(nextPlan);
+        rabbit.planExpiresAt = Date.now() + rabbit.plan.durationMs;
+      } finally {
+        rabbit.planRequestInFlight = false;
+      }
     }
 
     const requestInterval = setInterval(() => {
@@ -194,7 +214,7 @@
           requestPlan(rabbit);
         }
       });
-    }, 250);
+    }, RABBIT_PLAN_CHECK_INTERVAL_MS);
 
     rabbits.forEach((rabbit) => {
       requestPlan(rabbit);
@@ -208,7 +228,10 @@
         rabbit.mesh.position.x += rabbit.plan.direction.x * rabbit.plan.speed * deltaSeconds;
         rabbit.mesh.position.z += rabbit.plan.direction.z * rabbit.plan.speed * deltaSeconds;
 
-        if (Math.abs(rabbit.mesh.position.x) > 15 || Math.abs(rabbit.mesh.position.z) > 15) {
+        if (
+          Math.abs(rabbit.mesh.position.x) > RABBIT_BOUNDARY_LIMIT ||
+          Math.abs(rabbit.mesh.position.z) > RABBIT_BOUNDARY_LIMIT
+        ) {
           rabbit.planExpiresAt = 0;
         }
       });
@@ -246,7 +269,7 @@
 
     const proximityObserver = scene.onBeforeRenderObservable.add(() => {
       const distance = BABYLON.Vector3.Distance(camera.position, bed.position);
-      const nextNearby = distance <= 4;
+      const nextNearby = distance <= BED_INTERACTION_RANGE;
       if (nextNearby && !promptVisible && simulationUi) {
         simulationUi.setStatus('Press E near the bed to sleep until morning');
         promptVisible = true;
@@ -342,7 +365,7 @@
     try {
       await ensureScriptLoaded('./simulation_panel.js', 'simulationPanel');
     } catch (_) {
-      // Continue without simulation panel scripting when unavailable.
+      // Rendering can continue with chunk streaming even if simulation controls are unavailable.
     }
 
     const canvas = document.getElementById('renderCanvas');
@@ -351,8 +374,9 @@
       return;
     }
 
+    const rendererApi = window.api || {};
     const ipcRenderer = getIpcRenderer();
-    const worldId = await resolveActiveWorldId(window.api && window.api.worlds);
+    const worldId = await getOrCreateWorldId(rendererApi.worlds);
 
     const loader = new window.ChunkLoader({
       scene: sceneContext.scene,
@@ -371,18 +395,18 @@
     const simulationRoot = document.getElementById('simulation-panel');
     const simulationUi = window.simulationPanel && simulationRoot
       ? window.simulationPanel.initSimulationPanel(simulationRoot, {
-        tickApi: window.api && window.api.tick,
+        tickApi: rendererApi.tick,
       })
       : null;
     if (simulationUi) {
       simulationUi.setStatus('Simulation running');
     }
 
-    const rabbitDemo = spawnDemoRabbits(sceneContext.scene, window.api && window.api.ai);
+    const rabbitDemo = spawnDemoRabbits(sceneContext.scene, rendererApi.ai);
     const bedInteraction = attachBedInteraction(
       sceneContext.scene,
       sceneContext.camera,
-      window.api && window.api.tick,
+      rendererApi.tick,
       worldId,
       simulationUi,
     );

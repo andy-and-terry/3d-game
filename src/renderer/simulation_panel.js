@@ -2,6 +2,8 @@
   'use strict';
 
   const DAY_SECONDS = 24 * 60 * 60;
+  const MIN_REFRESH_INTERVAL_MS = 250;
+  const TICK_INTERVAL_HANDLE = '__simulationPanelTickInterval';
 
   function toSafeNumber(value, fallback) {
     const parsed = Number(value);
@@ -28,7 +30,7 @@
       if (entry && typeof entry === 'object') {
         const id = entry.id || `entity-${index + 1}`;
         const state = entry.state || 'unknown';
-        const action = entry.action || 'idle';
+        const action = entry.action || 'unknown';
         return `${id}: ${state} (${action})`;
       }
 
@@ -140,9 +142,15 @@
       els.jumpNight.addEventListener('click', async () => jumpToTime('night'));
     }
 
+    const refreshIntervalMs = Math.max(MIN_REFRESH_INTERVAL_MS, toSafeNumber(options.refreshIntervalMs, 1000));
+    if (root[TICK_INTERVAL_HANDLE]) {
+      clearInterval(root[TICK_INTERVAL_HANDLE]);
+    }
+
     const tickInterval = setInterval(() => {
       refreshTickState();
-    }, 1000);
+    }, refreshIntervalMs);
+    root[TICK_INTERVAL_HANDLE] = tickInterval;
 
     render();
     refreshTickState();
@@ -160,6 +168,9 @@
       },
       destroy() {
         clearInterval(tickInterval);
+        if (root[TICK_INTERVAL_HANDLE] === tickInterval) {
+          root[TICK_INTERVAL_HANDLE] = null;
+        }
       },
     };
   }

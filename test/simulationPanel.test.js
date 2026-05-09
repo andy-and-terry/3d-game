@@ -16,4 +16,8 @@ test('simulation panel normalizes AI debug entries', () => {
     normalizeAiStates([{ id: 'rabbit-1', state: 'foraging', action: 'move' }, 'rabbit-2: idle']),
     ['rabbit-1: foraging (move)', 'rabbit-2: idle'],
   );
+  assert.deepEqual(
+    normalizeAiStates([{ id: 'rabbit-3' }]),
+    ['rabbit-3: unknown (unknown)'],
+  );
 });

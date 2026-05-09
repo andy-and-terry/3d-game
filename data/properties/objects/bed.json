@@ -8,6 +8,6 @@
     "range": 4
   },
   "settings_patch": {
-    "last_slept": "ISO_TIMESTAMP"
+    "last_slept": "__runtime_iso_timestamp__"
   }
 }
