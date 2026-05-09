@@ -1,0 +1,15 @@
+{
+  "id": "flora.shrub",
+  "displayName": "Shrub",
+  "category": "flora",
+  "spawn": {
+    "biomes": ["grassland", "desert", "scrubland"],
+    "elevationMin": 0,
+    "elevationMax": 180,
+    "density": 0.35
+  },
+  "traits": {
+    "collidable": false,
+    "harvestable": true
+  }
+}
