@@ -9,7 +9,8 @@ const { ChunkGeneratorWorkerManager } = require('../src/main/chunkGeneratorWorke
 test('ChunkGeneratorWorkerManager generates, queues and caches chunks', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'chunks-'));
   const sourceWorkerPath = path.join(
-    '/home/runner/work/3d-game/3d-game',
+    __dirname,
+    '..',
     'src',
     'workers',
     'chunk_generator_worker.py',

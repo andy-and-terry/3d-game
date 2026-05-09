@@ -30,7 +30,11 @@ class ChunkGeneratorWorkerManager {
 
     const jobPromise = new Promise((resolve, reject) => {
       this.queue.push({ key, cachePath, x, y, seed, resolve, reject });
-      this.#drainQueue();
+      try {
+        this.#drainQueue();
+      } catch (error) {
+        reject(error);
+      }
     }).finally(() => {
       this.inFlight.delete(key);
     });
@@ -53,7 +57,9 @@ class ChunkGeneratorWorkerManager {
 
   async #writeCache(cachePath, chunk) {
     await fs.mkdir(this.cacheDir, { recursive: true });
-    await fs.writeFile(cachePath, JSON.stringify(chunk), 'utf8');
+    const tempPath = `${cachePath}.tmp-${process.pid}-${Date.now()}`;
+    await fs.writeFile(tempPath, JSON.stringify(chunk), 'utf8');
+    await fs.rename(tempPath, cachePath);
   }
 
   #chunkKey(x, y, seed) {
