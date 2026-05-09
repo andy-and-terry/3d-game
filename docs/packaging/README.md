@@ -13,8 +13,8 @@ npm run build:win
 
 ## electron-builder notes
 
-- Configuration is in `/home/runner/work/3d-game/3d-game/package.json` under `build`.
-- The NSIS include hook file is `/home/runner/work/3d-game/3d-game/tools/installer/include.nsh`.
+- Configuration is in `package.json` under `build`.
+- The NSIS include hook file is `tools/installer/include.nsh`.
 - To customize installer icon, set `build.win.icon` to an `.ico` file path.
 - To enable code signing, add standard `electron-builder` signing settings/cert environment variables on Windows CI or release machines.
 
@@ -22,8 +22,8 @@ npm run build:win
 
 Example files:
 
-- `/home/runner/work/3d-game/3d-game/tools/installer/installer.nsi`
-- `/home/runner/work/3d-game/3d-game/tools/installer/include.nsh`
+- `tools/installer/installer.nsi`
+- `tools/installer/include.nsh`
 
 Build the sample script manually (optional):
 
