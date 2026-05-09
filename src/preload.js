@@ -22,4 +22,16 @@ contextBridge.exposeInMainWorld('api', {
     openFile: (opts) => ipcRenderer.invoke('dialog:openFile', opts),
     saveFile: (opts) => ipcRenderer.invoke('dialog:saveFile', opts),
   },
+  ai: {
+    evaluate: async (payload) => ipcRenderer.invoke('ai:evaluate', payload),
+  },
+  tick: {
+    getState: async () => ipcRenderer.invoke('tick:get-state'),
+    pause: async () => ipcRenderer.invoke('tick:pause'),
+    resume: async () => ipcRenderer.invoke('tick:resume'),
+    setPaused: async (paused) => ipcRenderer.invoke('tick:set-paused', paused),
+    jumpToMorning: async () => ipcRenderer.invoke('tick:jump-to-morning'),
+    jumpToNight: async () => ipcRenderer.invoke('tick:jump-to-night'),
+    sleepToMorning: async (payload) => ipcRenderer.invoke('tick:sleep-to-morning', payload),
+  },
 });

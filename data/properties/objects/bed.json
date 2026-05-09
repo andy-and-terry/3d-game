@@ -1,0 +1,13 @@
+{
+  "id": "object.bed",
+  "name": "Bed",
+  "interaction": {
+    "key": "E",
+    "action": "sleep_to_morning",
+    "requires_proximity": true,
+    "range": 4
+  },
+  "settings_patch": {
+    "last_slept": "__runtime_iso_timestamp__"
+  }
+}
