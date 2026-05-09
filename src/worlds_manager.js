@@ -139,7 +139,7 @@ function init(app) {
     };
 
     writeWorldFile(id, duplicatedWorld);
-    const settings = getWorldSettings(sourceId);
+    const settings = sourceWorld.settings;
     writeSettingsFile(id, settings);
 
     const registry = loadRegistry();
