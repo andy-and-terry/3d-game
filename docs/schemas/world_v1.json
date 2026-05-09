@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/world_v1.json",
+  "title": "3D Game World File v1",
+  "description": "Example schema for .world files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "id",
+    "name",
+    "seed",
+    "settings",
+    "addons",
+    "created_at",
+    "last_played"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "description": "UUID for the world"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "seed": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "number" }
+      ]
+    },
+    "settings": {
+      "type": "object"
+    },
+    "addons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "version": { "type": "string" },
+          "enabled": { "type": "boolean" }
+        },
+        "required": ["id"],
+        "additionalProperties": true
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_played": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "thumbnail_base64": {
+      "type": "string",
+      "description": "Optional base64-encoded world thumbnail"
+    }
+  }
+}

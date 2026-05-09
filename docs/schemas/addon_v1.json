@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/addon_v1.json",
+  "title": "3D Game Addon File v1",
+  "description": "Example schema for .add addon manifest files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "id", "name", "entry", "enabled_by_default"],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entry": {
+      "type": "string",
+      "description": "Relative path to addon entry point"
+    },
+    "enabled_by_default": {
+      "type": "boolean"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
